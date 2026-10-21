@@ -157,6 +157,18 @@ async function startSession(user){
   el('topDate').textContent=dateAR(today());render();
 }
 function showError(error){console.error(error);toast(error?.message||String(error),true);}
+async function refreshSilently(){
+  // Do not replace the interface while RH is typing or filling a form.
+  const active=document.activeElement;
+  if(!state.user||document.querySelector('.modal-backdrop')||active?.matches('input, textarea, select,[contenteditable="true"]'))return;
+  const scroll=document.querySelector('.main-scroll');
+  const top=scroll?.scrollTop||0,left=scroll?.scrollLeft||0;
+  try{
+    const latest=await api.getState();state.data=latest.data;render();
+    // Keep the employee currently visible (for example employee 20), not employee 1.
+    requestAnimationFrame(()=>{if(scroll){scroll.scrollTop=top;scroll.scrollLeft=left;}});
+  }catch{/* The next refresh retries quietly without interrupting the user. */}
+}
 async function mutate(action,payload,rerender=true){
   try{const result=await api.mutate(action,payload);state.data=result.data;if(rerender)render();return result.result===undefined?true:result.result;}catch(e){showError(e);return undefined;}
 }
@@ -284,6 +296,6 @@ async function init(){
   boundEvents();
   showLogin();
   // Les modifications enregistrées par RH ou Manager apparaissent aussi sans fermer l'application.
-  setInterval(async()=>{if(!state.user)return;try{const latest=await api.getState();state.data=latest.data;render();}catch{}},30000);
+  setInterval(refreshSilently,30000);
 }
 init();
