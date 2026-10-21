@@ -19,6 +19,6 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run dist:win32 -- --publish always
+      - run: npx electron-builder --win nsis --ia32 --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
