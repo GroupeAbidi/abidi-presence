@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: 7.45 means 7 h 45 min, not a decimal hour
+ok 1 - 7.45 means 7 h 45 min, not a decimal hour
+  ---
+  duration_ms: 2.420791
+  type: 'test'
+  ...
+# Subtest: leave/sickness/rest/mission/absence codes are accepted
+ok 2 - leave/sickness/rest/mission/absence codes are accepted
+  ---
+  duration_ms: 0.623365
+  type: 'test'
+  ...
+# Subtest: night and afternoon shifts correctly pass midnight
+ok 3 - night and afternoon shifts correctly pass midnight
+  ---
+  duration_ms: 0.524707
+  type: 'test'
+  ...
+# Subtest: a shift change persists from the chosen date and later changes supersede it
+ok 4 - a shift change persists from the chosen date and later changes supersede it
+  ---
+  duration_ms: 11.286612
+  type: 'test'
+  ...
+# Subtest: monthly report accumulates minute-accurate totals and statuses
+ok 5 - monthly report accumulates minute-accurate totals and statuses
+  ---
+  duration_ms: 1.536915
+  type: 'test'
+  ...
+# Subtest: blank attendance removes an old record but does not change employee shift
+ok 6 - blank attendance removes an old record but does not change employee shift
+  ---
+  duration_ms: 1.144136
+  type: 'test'
+  ...
+# Subtest: company and matricule duplicate prevention, cross-company reuse allowed
+ok 7 - company and matricule duplicate prevention, cross-company reuse allowed
+  ---
+  duration_ms: 0.744787
+  type: 'test'
+  ...
+# Subtest: employee start and end dates limit attendance without losing past data
+ok 8 - employee start and end dates limit attendance without losing past data
+  ---
+  duration_ms: 0.352278
+  type: 'test'
+  ...
+# Subtest: state stays consistent and does not mutate on a rejected operation
+ok 9 - state stays consistent and does not mutate on a rejected operation
+  ---
+  duration_ms: 0.414602
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 69.497111
