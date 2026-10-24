@@ -9,13 +9,16 @@
     "start": "electron .",
     "dev": "electron .",
     "server": "node src/server.js",
+    "presence:api": "node api/server.js",
     "test": "node --test tests/*.test.js",
     "dist:win": "electron-builder --win nsis",
     "dist:win32": "electron-builder --win nsis --ia32"
   },
   "dependencies": {
+    "dotenv": "16.6.1",
     "electron-updater": "6.1.8",
-    "exceljs": "4.4.0"
+    "exceljs": "4.4.0",
+    "pg": "8.16.3"
   },
   "devDependencies": {
     "electron": "22.3.27",
@@ -44,11 +47,13 @@
       "createStartMenuShortcut": true
     },
     "asar": true,
-    "publish": [{
-      "provider": "github",
-      "owner": "GroupeAbidi",
-      "repo": "abidi-presence"
-    }]
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "GroupeAbidi",
+        "repo": "abidi-presence"
+      }
+    ]
   },
   "engines": {
     "node": ">=22"
