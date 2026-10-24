@@ -8,7 +8,8 @@ const ExcelJS=require('exceljs');
 const {autoUpdater}=require('electron-updater');
 let win, currentUser=null, sessionToken='', dbCache=null;
 // Adresse fixe du PC serveur de l'entreprise. Toutes les copies de l'application utilisent cette même base.
-const SERVER_URL=(process.env.PRESENCE_SERVER||'http://192.168.5.200:3210').replace(/\/$/,'');
+// The shared Presence service runs privately on the company's Tailscale network.
+const SERVER_URL=(process.env.PRESENCE_SERVER||'http://100.116.168.16:4001').replace(/\/$/,'');
 const mainFile=()=>path.join(app.getPath('userData'),'presence-data.json');
 function localState(){
   const p=mainFile();
