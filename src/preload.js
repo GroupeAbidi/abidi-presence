@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('attendanceAPI',Object.freeze({
   getState:()=>ipcRenderer.invoke('state:get'),
   mutate:(action,payload)=>ipcRenderer.invoke('data:mutate',action,payload),
   exportReport:(payload)=>ipcRenderer.invoke('report:export',payload),
+  exportManager:(payload)=>ipcRenderer.invoke('manager:export',payload),
   exportTemplate:()=>ipcRenderer.invoke('template:export'),
   importEmployees:()=>ipcRenderer.invoke('employees:import'),
   importPunch:()=>ipcRenderer.invoke('punch:import'),

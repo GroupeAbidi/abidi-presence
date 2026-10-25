@@ -110,6 +110,25 @@ async function exportReport({month,companyId=''}){
   [25,29,20,23,34].forEach((w,i)=>changes.getColumn(i+1).width=w);beautify(changes,5);
   await wb.xlsx.writeFile(res.filePath);return {saved:true,path:res.filePath};
 }
+async function exportManagerComparison(payload={}){
+  if(currentUser?.role!=='MANAGER')throw new Error('هذه الوظيفة مخصصة لحساب المدير.');
+  const rows=Array.isArray(payload.rows)?payload.rows:[];
+  if(rows.length>100000)throw new Error('عدد السجلات كبير جدًا للتصدير.');
+  const label=maybeFile(payload.label||'مراقبة-pointeuse');
+  const res=await saveDialog(path.join(app.getPath('downloads'),`${label}.xlsx`),[{name:'Excel',extensions:['xlsx']}]);
+  if(res.canceled||!res.filePath)return {saved:false};
+  const wb=new ExcelJS.Workbook();wb.creator='حضور المجموعة';wb.created=new Date();
+  const sheet=wb.addWorksheet('مراقبة pointeuse');
+  const heads=['التاريخ','الموظف','الرقم التعريفي','الشركة','دخول Machine','خروج Machine','Calcul','حضور RH','حالة RH','H− تأخر','H− خروج مبكر','H− الإجمالي','النتيجة'];
+  sheet.addRow(heads);
+  for(const x of rows){
+    const safe=x&&typeof x==='object'?x:{};
+    sheet.addRow([excelText(safe.date),excelText(safe.name),excelText(safe.matricule),excelText(safe.company),excelText(safe.inTime),excelText(safe.outTime),(Number(safe.calculatedMinutes)||0)/1440,excelText(safe.rhValue),excelText(safe.rhStatus),(Number(safe.lateMinutes)||0)/1440,(Number(safe.earlyMinutes)||0)/1440,(Number(safe.deductionMinutes)||0)/1440,excelText(safe.result)]);
+  }
+  [15,30,20,24,18,18,14,15,16,16,20,16,28].forEach((w,i)=>sheet.getColumn(i+1).width=w);
+  [7,10,11,12].forEach(n=>sheet.getColumn(n).numFmt='[h]:mm');beautify(sheet,heads.length);
+  await wb.xlsx.writeFile(res.filePath);return {saved:true,path:res.filePath};
+}
 async function exportTemplate(){
   const res=await saveDialog(path.join(app.getPath('downloads'),'نموذج-استيراد-الموظفين.xlsx'),[{name:'Excel',extensions:['xlsx']}]);
   if(res.canceled||!res.filePath)return {saved:false};
@@ -194,6 +213,7 @@ function installIpc(){
     const out=await serverRequest('/mutate',{method:'POST',data:{action,payload:payload||{}}});dbCache=out.data;return {result:out.result,data:out.data};
   });
   handle('report:export',exportReport);
+  handle('manager:export',exportManagerComparison);
   handle('template:export',exportTemplate);
   handle('employees:import',importEmployees);
   handle('punch:import',importPunchFile);
