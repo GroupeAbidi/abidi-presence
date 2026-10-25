@@ -1,6 +1,6 @@
 {
   "name": "abidi-presence-ar",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "نظام الحضور والمناوبات لشركات المجموعة - يعمل محليًا بالعربية",
   "main": "src/main.js",
   "private": true,
