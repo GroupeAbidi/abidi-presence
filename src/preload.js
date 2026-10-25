@@ -13,5 +13,6 @@ contextBridge.exposeInMainWorld('attendanceAPI',Object.freeze({
   deletePunchImport:(id)=>ipcRenderer.invoke('punch:delete',id),
   saveBackup:()=>ipcRenderer.invoke('backup:save'),
   restoreBackup:()=>ipcRenderer.invoke('backup:restore'),
-  openDataFolder:()=>ipcRenderer.invoke('app:openDataFolder')
+  openDataFolder:()=>ipcRenderer.invoke('app:openDataFolder'),
+  getVersion:()=>ipcRenderer.invoke('app:version')
 }));

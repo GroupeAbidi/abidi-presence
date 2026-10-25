@@ -3,7 +3,7 @@ const api=window.attendanceAPI;
 const el=id=>document.getElementById(id);
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const currentDay=today();
-const state={data:null,path:'',user:null,page:'dashboard',day:currentDay,month:currentDay.slice(0,7),view:'daily',attCompany:'',reportCompany:'',employeeCompany:'',search:'',reportMonth:currentDay.slice(0,7),employeeSearch:'',companySearch:'',managerFilter:'issues',managerImportId:'all',selected:new Set(),saving:false};
+const state={data:null,path:'',user:null,page:'dashboard',day:currentDay,month:currentDay.slice(0,7),view:'daily',attCompany:'',reportCompany:'',employeeCompany:'',search:'',reportMonth:currentDay.slice(0,7),employeeSearch:'',companySearch:'',managerFilter:'issues',managerImportId:'all',appVersion:'',selected:new Set(),saving:false};
 const sections={dashboard:['نظرة عامة','لوحة التحكم','متابعة مؤشرات الحضور والشركات من مكان واحد.'],attendance:['المتابعة اليومية','تسجيل الحضور','سجّل الساعات وحالات الغياب، وغيّر الفترة عند الحاجة.'],reports:['متابعة الأداء','التقارير والتحليل','مراجعة الحضور والساعات لكل شركة ولكل موظف.'],manager:['مراجعة الإدارة','مراقبة pointeuse','استيراد ملف البصمة ومقارنته بسجل حضور الموارد البشرية.'],companies:['إدارة المجموعة','الشركات','أضف شركات المجموعة ونظّم الموظفين حسب الشركة.'],employees:['الموارد البشرية','الموظفون','ملفات الموظفين والأرقام التعريفية وفترات العمل الأساسية.'],shifts:['تنظيم العمل','فترات العمل','عرّف المناوبات النهارية والليلية وغيرها.'],settings:['الإدارة المحلية','الإعدادات والنسخ الاحتياطي','التحكم باسم المجموعة وحماية البيانات.'],help:['المساعدة','دليل الاستخدام','شرح مبسّط لتسجيل الحضور وتغيير الفترات.']};
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const byId=(key,id)=>state.data[key].find(x=>x.id===id);
@@ -122,7 +122,7 @@ function pageSettings(){
   return heading()+`<div class="settings-card"><h3>اسم المجموعة</h3><p>يظهر هذا الاسم في أعلى التطبيق وفي التعريف العام.</p><form id="settingsForm" class="actions"><input name="groupName" style="max-width:350px" value="${esc(state.data.settings.groupName||'المجموعة')}" required maxlength="100" /><button type="submit" class="btn primary">حفظ الاسم</button></form></div>`+
   `<div class="settings-card"><h3>النسخ الاحتياطي والاسترجاع</h3><p>بيانات الشركات والموظفين والسجلات محفوظة على هذا الحاسوب. أنشئ نسخة احتياطية بانتظام واحفظها في مكان آخر. استرجاع النسخة يستبدل البيانات الحالية بعد تأكيد إضافي.</p><div class="actions"><button class="btn primary" data-action="save-backup">↓ حفظ نسخة احتياطية</button><button class="btn" data-action="restore-backup">↶ استرجاع نسخة محفوظة</button></div></div>`+
   `<div class="settings-card"><h3>موقع قاعدة البيانات المحلية</h3><p>التطبيق لا يتصل بخادم خارجي ولا يرسل بيانات الموظفين إلى الإنترنت. جميع التغييرات تُحفظ تلقائيًا في ملف محلي، وتوجد نسخة تعافٍ سابقة بجانبه.</p><div class="path">${esc(state.path)}</div><button class="btn" data-action="open-data-folder">فتح مجلد البيانات</button></div>`+
-  `<div class="settings-card"><h3>معلومات التشغيل</h3><p>الإصدار 1.0.0 · Electron · نظام مستقل يعمل دون اتصال بعد التثبيت · جهاز واحد في الوقت نفسه. لإتاحة التحرير المشترك بين عدة حواسيب ستلزم نسخة مزوّدة بخادم وقاعدة بيانات مشتركة.</p></div>`;
+  `<div class="settings-card"><h3>معلومات التشغيل</h3><p>إصدار التطبيق: <b class="ltr">${esc(state.appVersion||'—')}</b> · متصل بخادم الحضور المشترك عبر Tailscale. عند توفر تحديث، يُنزّل تلقائيًا ويظهر زر التثبيت عند فتح التطبيق.</p></div>`;
 }
 function pageHelp(){
  const items=[
@@ -298,6 +298,7 @@ function boundEvents(){
   });
 }
 async function init(){
+  state.appVersion=await api.getVersion().catch(()=> '');
   boundEvents();
   showLogin();
   // Les modifications enregistrées par RH ou Manager apparaissent aussi sans fermer l'application.

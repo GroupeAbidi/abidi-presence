@@ -215,6 +215,7 @@ function installIpc(){
     const saved=await serverRequest('/backup/restore',{method:'POST',data:{data:restored}});dbCache=saved.data;return {restored:true,data:saved.data};
   });
   handle('app:openDataFolder',()=>{shell.showItemInFolder(mainFile());return true;});
+  handle('app:version',()=>app.getVersion());
 }
 function createWindow(){
   win=new BrowserWindow({width:1470,height:900,minWidth:1000,minHeight:650,title:'حضور المجموعة | نظام الشركات والمناوبات',backgroundColor:'#f3f6fa',show:false,webPreferences:{preload:path.join(__dirname,'preload.js'),nodeIntegration:false,contextIsolation:true,sandbox:true,webSecurity:true}});
