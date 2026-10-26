@@ -48,6 +48,7 @@ const server=http.createServer(async(req,res)=>{try{
   if(req.method==='GET'&&req.url==='/state'){const db=await load();if(u.role!=='MANAGER')delete db.punchImports;return send(res,200,{data:db});}
   if(req.method==='POST'&&req.url==='/mutate'){
     const p=await body(req);if(!allowed.has(p.action))return send(res,400,{error:'طلب غير مسموح.'});
+    if(p.action==='settings:save'&&p.payload?.punchRules!==undefined&&u.role!=='MANAGER')return send(res,403,{error:'قواعد H− مخصصة لحساب المدير.'});
     const out=await write(db=>core.mutate(db,p.action,p.payload||{}));return send(res,200,{result:out.result,data:out.data});
   }
   if(req.method==='POST'&&req.url==='/punch/import'){

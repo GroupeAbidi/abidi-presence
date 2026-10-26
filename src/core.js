@@ -14,6 +14,11 @@ const DEFAULT_USERS = Object.freeze([
   {id:'user-rh',username:'rh',displayName:'الموارد البشرية',role:'RH',passwordHash:passwordHash('rh1234')},
   {id:'user-manager',username:'manager',displayName:'المدير',role:'MANAGER',passwordHash:passwordHash('manager1234')}
 ]);
+const DEFAULT_PUNCH_RULES = Object.freeze({lateGraceMinutes:15,earlyGraceMinutes:10,deductionBlockMinutes:15});
+function punchRules(value={}){
+  const number=(key,fallback)=>{const n=Number(value[key]);return Number.isInteger(n)&&n>=0&&n<=240?n:fallback;};
+  return {lateGraceMinutes:number('lateGraceMinutes',DEFAULT_PUNCH_RULES.lateGraceMinutes),earlyGraceMinutes:number('earlyGraceMinutes',DEFAULT_PUNCH_RULES.earlyGraceMinutes),deductionBlockMinutes:Math.max(1,number('deductionBlockMinutes',DEFAULT_PUNCH_RULES.deductionBlockMinutes))};
+}
 const arabicToLatin = s => String(s).replace(/[٠-٩]/g, n => String(n.charCodeAt(0)-0x660)).replace(/[۰-۹]/g, n => String(n.charCodeAt(0)-0x6F0));
 
 function isDate(value) {
@@ -57,7 +62,7 @@ function parseOvertime(input) {
   return parseDuration(raw.replace(/\s+/g,'').replace(/س(?:اعة|اعات)?/g,'').replace(/H/g,'').replace(/\+/g,''),'الساعات الإضافية');
 }
 function newState() {
-  return {version:1,companies:[],employees:[],shifts:clone(DEFAULT_SHIFTS),shiftChanges:[],attendance:[],punchImports:[],users:clone(DEFAULT_USERS),settings:{groupName:'المجموعة',createdAt:new Date().toISOString()}};
+  return {version:1,companies:[],employees:[],shifts:clone(DEFAULT_SHIFTS),shiftChanges:[],attendance:[],punchImports:[],users:clone(DEFAULT_USERS),settings:{groupName:'المجموعة',createdAt:new Date().toISOString(),punchRules:clone(DEFAULT_PUNCH_RULES)}};
 }
 function validateState(d) {
   if(!d||d.version!==1) err('ملف النسخة الاحتياطية غير متوافق مع هذا الإصدار.');
@@ -67,6 +72,7 @@ function validateState(d) {
   if(d.users.length<2||d.users.length>50||d.users.some(u=>!u||!['RH','MANAGER'].includes(u.role)||!trim(u.username,60)||!trim(u.displayName,120)||!/^[a-f0-9]{64}$/.test(u.passwordHash||''))) err('حسابات المستخدمين غير صالحة.');
   if(d.punchImports.length>50||d.punchImports.some(x=>!x||typeof x.id!=='string'||!Array.isArray(x.records)||x.records.length>100000)) err('ملفات pointeuse غير صالحة.');
   if(!d.settings||typeof d.settings!=='object') err('إعدادات النسخة الاحتياطية غير صالحة.');
+  d.settings.punchRules=punchRules(d.settings.punchRules);
   const unique=(list,name) => { const all=new Set(); for(const x of list){ if(!x||typeof x.id!=='string'||!x.id||all.has(x.id)) err(`معرّفات غير صحيحة في ${name}.`); all.add(x.id);} };
   for(const k of ['companies','employees','shifts','shiftChanges','attendance']) unique(d[k],k);
   for(const s of d.shifts) shiftDuration(s);
@@ -160,9 +166,9 @@ function mutate(original,action,payload={}) {
     case 'shift:set':result=setShift(db,payload);break;
     case 'shift:clear':result=clearShift(db,payload);break;
     case 'attendance:save':result=saveAttendance(db,payload);break;
-    case 'settings:save':db.settings.groupName=trim(payload.groupName,100)||'المجموعة';break;
+    case 'settings:save':if(payload.groupName!==undefined)db.settings.groupName=trim(payload.groupName,100)||'المجموعة';if(payload.punchRules!==undefined)db.settings.punchRules=punchRules(payload.punchRules);break;
     default:err('طلب غير معروف.');
   }
   return {state:db,result};
 }
-module.exports={STATUS_NAMES,DEFAULT_SHIFTS,DEFAULT_USERS,clone,trim,passwordHash,arabicToLatin,isDate,validDate,isMonth,dayList,monthDays,shiftDuration,durationText,parseAttendance,parseOvertime,newState,validateState,employeeOnDate,employeeInMonth,effectiveShiftId,getShift,getRecord,monthlySummary,mutate};
+module.exports={STATUS_NAMES,DEFAULT_SHIFTS,DEFAULT_USERS,DEFAULT_PUNCH_RULES,punchRules,clone,trim,passwordHash,arabicToLatin,isDate,validDate,isMonth,dayList,monthDays,shiftDuration,durationText,parseAttendance,parseOvertime,newState,validateState,employeeOnDate,employeeInMonth,effectiveShiftId,getShift,getRecord,monthlySummary,mutate};

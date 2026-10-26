@@ -15,6 +15,11 @@ test('new data includes RH and manager accounts with password hashes',()=>{
   assert.equal(db.users.find(u=>u.username==='rh').passwordHash,c.passwordHash('rh1234'));
   assert.doesNotThrow(()=>c.validateState(db));
 });
+test('manager punch rules have safe defaults and are persisted',()=>{
+  assert.deepEqual(db.settings.punchRules,{lateGraceMinutes:15,earlyGraceMinutes:10,deductionBlockMinutes:15});
+  doMutate('settings:save',{punchRules:{lateGraceMinutes:'20',earlyGraceMinutes:'12',deductionBlockMinutes:'30'}});
+  assert.deepEqual(db.settings.punchRules,{lateGraceMinutes:20,earlyGraceMinutes:12,deductionBlockMinutes:30});
+});
 test('7.45 means 7 h 45 min, not a decimal hour',()=>{
   assert.deepEqual(c.parseAttendance('7.45'),{value:'7.45',status:'WORK',minutes:465});
   assert.equal(c.parseAttendance('٧:٤٥').minutes,465);
