@@ -10,7 +10,8 @@ const byId=(key,id)=>state.data[key].find(x=>x.id===id);
 const companyOf=emp=>byId('companies',emp.companyId)?.name||'شركة محذوفة';
 const dateAR=d=>{if(!d)return '';try{return new Intl.DateTimeFormat('ar-DZ',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date(d+'T12:00:00'));}catch{return d;}};
 const dayTitle=d=>new Intl.DateTimeFormat('ar-DZ',{weekday:'short'}).format(new Date(d+'T12:00:00'));
-const formatMinutes=x=>`${Math.floor((x||0)/60)}س ${String((x||0)%60).padStart(2,'0')}د`;
+// Keep durations readable inside the Arabic (RTL) interface.
+const formatMinutes=x=>`${Math.floor((x||0)/60)}H/ ${String((x||0)%60).padStart(2,'0')}m`;
 const dateList=month=>{const [y,m]=month.split('-').map(Number),days=new Date(y,m,0).getDate();return Array.from({length:days},(_,i)=>`${month}-${String(i+1).padStart(2,'0')}`)};
 const activeOn=(e,d)=>e.joinDate<=d&&(!e.endDate||e.endDate>=d);
 const inMonth=(e,m)=>e.joinDate<=dateList(m).at(-1)&&(!e.endDate||e.endDate>=m+'-01');
