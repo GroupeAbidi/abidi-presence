@@ -1,5 +1,6 @@
 'use strict';
 const api=window.attendanceAPI;
+const normalizePunchImports=window.PunchUtils.normalizePunchImports;
 const el=id=>document.getElementById(id);
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const currentDay=today();
@@ -46,6 +47,7 @@ function punchDeductions(punch,shift){
   return {late,early,total:late+early};
 }
 const managerDateIncluded=date=>state.managerMode==='day'?date===state.managerDay:date.startsWith(state.managerMonth+'-');
+function comparedPunches(imports){const employees=new Map(state.data.employees.map(e=>[String(e.matricule).trim().toLowerCase(),e]));return normalizePunchImports(imports,employees,(employee,date)=>effectiveShift(employee,date));}
 function summary(e,month){const x={e,workMinutes:0,overtimeMinutes:0,workDays:0,C:0,M:0,R:0,MIS:0,A:0,empty:0,recorded:0};for(const d of dateList(month)){if(!activeOn(e,d))continue;const a=record(e.id,d);if(!a){x.empty++;continue;}x.recorded++;if(a.status==='WORK'){x.workMinutes+=a.minutes;x.overtimeMinutes+=a.overtimeMinutes||0;x.workDays++;}else if(Object.hasOwn(x,a.status))x[a.status]++;}return x;}
 const names={WORK:'حضور',C:'عطلة',M:'مرض',R:'راحة',MIS:'مهمة',A:'غياب'};
 const cssStatus=s=>s?`code-${s.toLowerCase()}`:'';
@@ -126,7 +128,7 @@ function pageReports(){
 }
 function managerComparison(){
   const imports=state.managerImportId==='all'?(state.data.punchImports||[]):(state.data.punchImports||[]).filter(x=>x.id===state.managerImportId);
-  const punchMap=new Map();for(const item of imports)for(const x of item.records||[])if(managerDateIncluded(x.date))punchMap.set(`${String(x.matricule).trim().toLowerCase()}|${x.date}`,x);
+  const punchMap=new Map();for(const x of comparedPunches(imports))if(managerDateIncluded(x.date))punchMap.set(`${String(x.matricule).trim().toLowerCase()}|${x.date}`,x);
   const employeeByCode=new Map(state.data.employees.map(e=>[String(e.matricule).trim().toLowerCase(),e]));const rows=[],seen=new Set(),importedDates=new Set([...punchMap.values()].map(x=>x.date));
   for(const [key,p] of punchMap){const emp=employeeByCode.get(String(p.matricule).trim().toLowerCase()),rh=emp?record(emp.id,p.date):null,shift=emp?effectiveShift(emp,p.date):null,calculated=machineCalculation(p,shift),deductions=punchDeductions(p,shift);let result='مطابق',kind='match',difference=null;
     if(!emp){result='رقم غير مربوط بموظف RH';kind='unlinked';}else if(!rh){result='موجود في pointeuse فقط';kind='punch-only';}else if(rh.status!=='WORK'){result=`حالة RH: ${names[rh.status]}`;kind='status';}else {difference=calculated.minutes-rh.minutes;if(Math.abs(difference)>15){result='فرق في الساعات';kind='difference';}}
@@ -231,7 +233,7 @@ function showModal(type,id=''){
 function closeModal(){el('modalHost').innerHTML='';}
 function showPunchDetail(employeeId){
   if(state.user?.role!=='MANAGER')return;const emp=byId('employees',employeeId);if(!emp){toast('الموظف غير موجود.',true);return;}
-  const code=String(emp.matricule).trim().toLowerCase(),punchMap=new Map(),imports=state.managerImportId==='all'?(state.data.punchImports||[]):(state.data.punchImports||[]).filter(x=>x.id===state.managerImportId);for(const item of imports)for(const x of item.records||[])if(String(x.matricule).trim().toLowerCase()===code)punchMap.set(x.date,x);
+  const code=String(emp.matricule).trim().toLowerCase(),punchMap=new Map(),imports=state.managerImportId==='all'?(state.data.punchImports||[]):(state.data.punchImports||[]).filter(x=>x.id===state.managerImportId);for(const x of comparedPunches(imports))if(String(x.matricule).trim().toLowerCase()===code)punchMap.set(x.date,x);
   const dates=new Set([...punchMap.keys()].filter(managerDateIncluded));for(const a of state.data.attendance)if(a.employeeId===emp.id&&managerDateIncluded(a.date)&&dates.size&&(imports.some(i=>i.records?.some(x=>x.date===a.date))))dates.add(a.date);
   const days=[...dates].sort((a,b)=>a.localeCompare(b));let machineMinutes=0,rhMinutes=0,plus=0,minus=0;
   const cards=days.map(date=>{const punch=punchMap.get(date),rh=record(emp.id,date),shift=effectiveShift(emp,date),calculated=machineCalculation(punch,shift),deductions=punchDeductions(punch,shift);let kind='neutral',label='دون تسجيل',difference=null;
